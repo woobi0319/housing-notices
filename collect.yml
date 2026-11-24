@@ -1,0 +1,49 @@
+name: 공고 모으기
+
+on:
+  schedule:
+    - cron: "17 22 * * *"   # 매일 아침 7시 17분 (한국 시간)
+    - cron: "43 8 * * *"    # 매일 저녁 5시 43분 (한국 시간)
+  workflow_dispatch: {}      # Actions 탭에서 손으로 바로 실행
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 도구 설치
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: 공고 모으기
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: python collector/collect.py
+
+      - name: 결과 저장
+        run: |
+          git config user.name "notice-bot"
+          git config user.email "notice-bot@users.noreply.github.com"
+          git add docs/notices.json
+          git diff --cached --quiet || git commit -m "공고 갱신 $(TZ=Asia/Seoul date +'%m/%d %H:%M')"
+          git push

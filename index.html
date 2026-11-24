@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="공고 알림">
+<meta name="theme-color" content="#ffffff">
+<title>새 분양·임대 공고</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0d0e18);--ink:light-dark(#14110f,#ecebf3);--sub:light-dark(#5d6170,#a3a6b8);--line:light-dark(#e3e5ec,#262838);--card:light-dark(#f6f7fa,#161828);--acc:light-dark(#1d2bd8,#8f99ff);--sale:light-dark(#1d2bd8,#8f99ff);--pub:light-dark(#c2410c,#ff9b6b);--pri:light-dark(#7a2fc9,#c79bff);--rem:light-dark(#4a5568,#a9b4c6);--news:light-dark(#0f766e,#5eead4);--bad:light-dark(#b42318,#ff8a80)}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans KR",system-ui,-apple-system,sans-serif;overflow-x:clip}
+.wrap{max-width:760px;margin:0 auto;padding:max(20px,env(safe-area-inset-top)) max(4vw,16px) max(48px,env(safe-area-inset-bottom))}
+h1{font-size:clamp(26px,6vw,34px);line-height:1.1;margin:8px 0 4px;font-weight:700}
+.stamp{color:var(--sub);font-size:14px;margin:0}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0 14px}
+.stat{background:var(--card);border-radius:14px;padding:12px 14px}
+.stat b{display:block;font-size:clamp(24px,6vw,30px);line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--sub)}
+.stat.hot b{color:var(--acc)}
+.strip-h{font-size:14px;color:var(--sub);margin:16px 0 6px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.strip{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px}
+.day{flex:0 0 46px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:6px 0 4px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:96px}
+.day .bar{width:14px;flex:1;display:flex;align-items:flex-end}
+.day .bar i{display:block;width:100%;background:var(--acc);border-radius:4px 4px 2px 2px;opacity:.85}
+.day small{font-size:13px;color:var(--sub);line-height:1.1}
+.day em{font-style:normal;font-size:13px;font-weight:600}
+.day.sel{background:var(--acc);border-color:var(--acc);color:#fff}.day.sel small{color:#fff}.day.sel .bar i{background:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 8px}
+.chip{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 15px "IBM Plex Sans KR",sans-serif;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.small{min-height:32px;font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input[type=search]{font:16px "IBM Plex Sans KR",sans-serif;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:0 12px;background:var(--bg);color:var(--ink)}
+input[type=search]{flex:1 1 180px}
+label.tg{display:flex;align-items:center;gap:6px;font-size:15px;min-height:44px;cursor:pointer}
+label.tg input{width:20px;height:20px;accent-color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.count{font-size:14px;color:var(--sub);margin:14px 0 6px}
+ul.list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.card{display:block;background:var(--card);border-radius:16px;padding:14px 16px;color:inherit;text-decoration:none;border-left:4px solid var(--c)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--sub)}
+.tag{color:var(--c);font-weight:600}
+.new{background:var(--acc);color:#fff;font-weight:700;font-size:12px;border-radius:6px;padding:1px 7px}
+.t{font-weight:600;font-size:16px;line-height:1.4;margin:6px 0 8px;overflow-wrap:anywhere}
+.dates{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px}
+.dates span{white-space:nowrap}
+.dd{margin-left:auto;font-weight:700;white-space:nowrap}
+.st-on .dd{color:var(--acc)}.st-soon .dd{color:var(--pub)}.st-off{opacity:.6}
+.empty{padding:28px 16px;text-align:center;color:var(--sub);background:var(--card);border-radius:16px}
+details.src{margin-top:28px;border-top:1px solid var(--line);padding-top:14px;font-size:14px;color:var(--sub)}
+details.src summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+.src ul{list-style:none;padding:0;margin:4px 0 0;display:grid;gap:4px}
+.src li{display:flex;justify-content:space-between;gap:10px}
+.src .bad{color:var(--bad)}
+.note{font-size:14px;color:var(--sub)}
+@media(max-width:600px){.stat{padding:10px 12px}.dd{margin-left:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>새 분양·임대 공고</h1>
+  <p class="stamp" id="stamp">불러오는 중…</p>
+
+  <div class="stats">
+    <div class="stat hot"><b id="sNew">–</b><span>최근 3일 새 공고</span></div>
+    <div class="stat"><b id="sOpen">–</b><span>지금 접수 중</span></div>
+    <div class="stat"><b id="sWeek">–</b><span>7일 안에 마감</span></div>
+  </div>
+
+  <div class="strip-h"><span>날짜별 접수 마감 (누르면 그날 마감만)</span><button class="chip small" id="dayClear" hidden>날짜 해제</button></div>
+  <div class="strip" id="strip" role="group" aria-label="마감일 선택"></div>
+
+  <div class="chips" id="cats" role="group" aria-label="공고 종류"></div>
+  <div class="row">
+    <select id="region" aria-label="지역"></select>
+    <input type="search" id="q" placeholder="단지명·지역 검색" aria-label="검색">
+  </div>
+  <div class="row">
+    <label class="tg"><input type="checkbox" id="newOnly"> 새 공고만</label>
+    <label class="tg"><input type="checkbox" id="hideOff" checked> 마감 숨기기</label>
+  </div>
+
+  <p class="count" id="count"></p>
+  <ul class="list" id="list"></ul>
+
+  <details class="src" id="srcBox">
+    <summary id="srcSum">모은 곳</summary>
+    <ul id="srcList"></ul>
+    <p class="note">하루 두 번(아침 7시, 저녁 6시 무렵) 자동으로 모아요. 신청 전에는 꼭 모집공고문 원문을 확인하세요.</p>
+  </details>
+</div>
+
+<script>
+{
+const CAT={sale:['분양','--sale'],pub:['공공임대','--pub'],pri:['민간임대','--pri'],rem:['무순위·잔여','--rem'],news:['뉴스','--news']};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const day=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const md=s=>s?(+s.slice(5,7))+'.'+(+s.slice(8,10)):'';
+const now=new Date();now.setHours(0,0,0,0);
+const TODAY=iso(now);
+const diff=s=>Math.round((day(s)-now)/864e5);
+const safeUrl=u=>/^https?:\/\//.test(u||'')?u:'#';
+let D=[];
+
+let st={cat:'all',region:'all',q:'',newOnly:false,hideOff:true,day:''};
+try{Object.assign(st,JSON.parse(localStorage.getItem('notice-filter')||'{}'),{day:'',q:''})}catch(e){}
+const save=()=>{try{localStorage.setItem('notice-filter',JSON.stringify({cat:st.cat,region:st.region,newOnly:st.newOnly,hideOff:st.hideOff}))}catch(e){}};
+
+function prep(data){
+  const firstRun=(data.items||[]).reduce((m,x)=>x.first_seen&&(!m||x.first_seen<m)?x.first_seen:m,'');
+  const newCut=new Date(Date.now()-3*864e5).toISOString().slice(0,10);
+  const postCut=iso(new Date(now.getTime()-7*864e5));
+  D=(data.items||[]).map(x=>{
+    const n={...x};
+    const seen=(n.first_seen||'').slice(0,10);
+    n.isNew=seen>=newCut&&n.first_seen!==firstRun&&(!n.posted||n.posted>=postCut);
+    if(firstRun&&n.first_seen===firstRun&&n.posted>=iso(new Date(now.getTime()-3*864e5)))n.isNew=true;
+    if(n.cat==='news'){n.st='on';n.dd='기사'}
+    else if(!n.end){n.st='on';n.dd='공고문 확인'}
+    else if(n.end<TODAY){n.st='off';n.dd='마감'}
+    else if(n.start&&n.start>TODAY){n.st='soon';n.dd='접수 D-'+diff(n.start)}
+    else{const k=diff(n.end);n.st='on';n.dd=k===0?'오늘 마감':'마감 D-'+k}
+    return n;
+  });
+}
+
+function setup(data){
+  const up=data.updated?new Date(data.updated):null;
+  $('stamp').textContent=up?`${D.length}건 · ${up.getMonth()+1}.${up.getDate()} ${pad(up.getHours())}:${pad(up.getMinutes())} 업데이트`:'아직 첫 수집 전이에요. 잠시 뒤 다시 열어 보세요.';
+  const housing=D.filter(x=>x.cat!=='news');
+  $('sNew').textContent=D.filter(x=>x.isNew).length;
+  $('sOpen').textContent=housing.filter(x=>x.st==='on'&&x.end).length;
+  $('sWeek').textContent=housing.filter(x=>x.end&&x.end>=TODAY&&diff(x.end)<=7).length;
+  const keys=[['all','전체'],...Object.entries(CAT).map(([k,v])=>[k,v[0]])];
+  $('cats').innerHTML=keys.map(([k,n])=>`<button class="chip" data-c="${k}" aria-pressed="${st.cat===k}">${n} <span style="opacity:.6">${k==='all'?D.length:D.filter(x=>x.cat===k).length}</span></button>`).join('');
+  const regs=[...new Set(D.map(x=>x.region))].sort((a,b)=>a.localeCompare(b,'ko'));
+  $('region').innerHTML='<option value="all">전체 지역</option>'+regs.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join('');
+  $('region').value=regs.includes(st.region)?st.region:'all';
+  $('newOnly').checked=st.newOnly;$('hideOff').checked=st.hideOff;
+  const src=data.sources||[];
+  const bad=src.filter(s=>!s.ok&&!s.skipped).length;
+  $('srcSum').textContent=`모은 곳 ${src.filter(s=>s.ok).length}곳`+(bad?` · 실패 ${bad}곳`:'');
+  $('srcList').innerHTML=src.map(s=>`<li><span>${esc(s.name)}</span><span class="${s.ok?'':'bad'}">${s.ok?s.count+'건':s.skipped?'사용 안 함':'실패'}</span></li>`).join('');
+}
+
+function drawStrip(){
+  const days=[];for(let i=0;i<17;i++)days.push(iso(new Date(now.getTime()+i*864e5)));
+  const cnt=days.map(d=>D.filter(x=>x.end===d&&(st.cat==='all'||x.cat===st.cat)&&(st.region==='all'||x.region===st.region)).length);
+  const mx=Math.max(1,...cnt),wk='일월화수목금토';
+  $('strip').innerHTML=days.map((d,i)=>`<button class="day${st.day===d?' sel':''}" data-d="${d}" aria-pressed="${st.day===d}" aria-label="${md(d)} 마감 ${cnt[i]}건"><em>${cnt[i]||''}</em><span class="bar"><i style="height:${cnt[i]?Math.max(8,cnt[i]/mx*100):0}%"></i></span><small>${i===0?'오늘':md(d)}</small><small>${wk[day(d).getDay()]}</small></button>`).join('');
+  $('dayClear').hidden=!st.day;
+}
+
+function draw(){
+  const q=st.q.trim().toLowerCase();
+  const r=D.filter(x=>(st.cat==='all'||x.cat===st.cat)&&(st.region==='all'||x.region===st.region)&&(!st.newOnly||x.isNew)&&(!st.hideOff||x.st!=='off'||st.day)&&(!st.day||x.end===st.day)&&(!q||(x.title+x.region+x.type+x.source).toLowerCase().includes(q)));
+  r.sort((a,b)=>(b.isNew-a.isNew)||(b.posted||'').localeCompare(a.posted||'')||(a.end||'9').localeCompare(b.end||'9'));
+  const hidden=st.hideOff&&!st.day?D.filter(x=>x.st==='off'&&(st.cat==='all'||x.cat===st.cat)&&(st.region==='all'||x.region===st.region)).length:0;
+  $('count').textContent=`${r.length}건`+(st.day?` · ${md(st.day)} 마감`:'')+(hidden?` · 마감된 ${hidden}건 숨김`:'');
+  $('list').innerHTML=r.length?r.map(x=>{const c=CAT[x.cat]||CAT.pub;return `<li><a class="card st-${x.st}" style="--c:var(${c[1]})" href="${esc(safeUrl(x.link))}" target="_blank" rel="noopener">
+    <div class="meta">${x.isNew?'<span class="new">NEW</span>':''}<span class="tag">${c[0]}</span><span>${esc(x.type)}</span><span>${esc(x.region)}</span><span>${esc(x.source)}</span></div>
+    <div class="t">${esc(x.title)}</div>
+    <div class="dates">${x.posted?`<span>${x.cat==='news'?'보도':'게시'} ${md(x.posted)}</span>`:''}${x.start&&x.start!==x.end?`<span>접수 ${md(x.start)}~${md(x.end)}</span>`:x.end?`<span>마감 ${md(x.end)}</span>`:''}${x.announce?`<span>발표 ${md(x.announce)}</span>`:''}<span class="dd">${x.dd}</span></div>
+  </a></li>`}).join(''):'<li class="empty">조건에 맞는 공고가 없어요. 필터를 줄여 보세요.</li>';
+}
+
+$('cats').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;st.cat=b.dataset.c;document.querySelectorAll('#cats .chip').forEach(c=>c.setAttribute('aria-pressed',c===b));save();drawStrip();draw()});
+$('strip').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;st.day=st.day===b.dataset.d?'':b.dataset.d;drawStrip();draw()});
+$('dayClear').addEventListener('click',()=>{st.day='';drawStrip();draw()});
+$('region').addEventListener('change',e=>{st.region=e.target.value;save();drawStrip();draw()});
+$('q').addEventListener('input',e=>{st.q=e.target.value;draw()});
+$('newOnly').addEventListener('change',e=>{st.newOnly=e.target.checked;save();draw()});
+$('hideOff').addEventListener('change',e=>{st.hideOff=e.target.checked;save();draw()});
+
+fetch('notices.json?t='+Date.now()).then(r=>r.json()).then(data=>{prep(data);setup(data);drawStrip();draw()})
+  .catch(()=>{$('stamp').textContent='공고 목록을 불러오지 못했어요. 잠시 뒤 다시 열어 보세요.';$('list').innerHTML=''});
+}
+</script>
+</body>
+</html>
